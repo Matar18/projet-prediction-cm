@@ -12,6 +12,7 @@ env/
 db.sqlite3
 db.sqlite3-journal
 *.log
+staticfiles/
 
 # Variables d'environnement locales (si tu ajoutes un fichier .env plus tard)
 .env
