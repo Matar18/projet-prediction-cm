@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prédiction Coupe du Monde</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --surface: #1a1d24;
+      --surface-2: #23262f;
+      --text: #eef0f3;
+      --text-muted: #9aa0ac;
+      --teal: #2dd4bf;
+      --coral: #f87171;
+      --gray: #6b7280;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 4px;
+    }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin: 0 0 24px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .field {
+      flex: 1;
+      min-width: 200px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      border: 1px solid #333844;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14px;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .checkbox-row input { width: 16px; height: 16px; }
+    .checkbox-row label { margin: 0; color: var(--text-muted); font-size: 13px; }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--teal);
+      color: #04201c;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .errors {
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid var(--coral);
+      color: var(--coral);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 24px 0;
+    }
+    .stat-box {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .stat-box p.team-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin: 0 0 8px;
+    }
+    .stat-box table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+    .stat-box td { padding: 3px 0; }
+    .stat-box td.value { text-align: right; }
+    .stat-box td.label { color: var(--text-muted); }
+    .bar-block { margin-bottom: 14px; }
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+    .bar-header .pct { font-weight: 600; }
+    .bar-track {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      height: 10px;
+      overflow: hidden;
+    }
+    .bar-fill { height: 100%; border-radius: var(--radius); }
+    .fill-home { background: var(--teal); }
+    .fill-draw { background: var(--gray); }
+    .fill-away { background: var(--coral); }
+    .model-note {
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚽ Plateforme de prédiction — Coupe du Monde</h1>
+    <p class="subtitle">Basée sur un modèle de régression logistique entraîné sur l'historique des matchs internationaux et le classement FIFA.</p>
+
+    {% if form.non_field_errors %}
+      <div class="errors">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <div class="field">
+          <label for="{{ form.home_team.id_for_label }}">Équipe à domicile</label>
+          {{ form.home_team }}
+        </div>
+        <div class="field">
+          <label for="{{ form.away_team.id_for_label }}">Équipe adverse</label>
+          {{ form.away_team }}
+        </div>
+      </div>
+      <div class="checkbox-row">
+        {{ form.neutral }}
+        <label for="{{ form.neutral.id_for_label }}">Terrain neutre</label>
+      </div>
+      <button type="submit">Prédire le résultat</button>
+    </form>
+
+    {% if result %}
+      <div class="stats-row">
+        <div class="stat-box">
+          <p class="team-name">{{ result.home }}</p>
+          <table>
+            <tr><td class="label">Rang FIFA</td><td class="value">#{{ result.home_stats.rank|floatformat:0 }}</td></tr>
+            <tr><td class="label">Points FIFA</td><td class="value">{{ result.home_stats.total_points|floatformat:0 }}</td></tr>
+            <tr><td class="label">Forme (5 derniers)</td><td class="value">{% widthratio result.home_stats.form5_winrate 1 100 %}% victoires</td></tr>
+            <tr><td class="label">Confédération</td><td class="value">{{ result.home_stats.confederation }}</td></tr>
+          </table>
+        </div>
+        <div class="stat-box">
+          <p class="team-name">{{ result.away }}</p>
+          <table>
+            <tr><td class="label">Rang FIFA</td><td class="value">#{{ result.away_stats.rank|floatformat:0 }}</td></tr>
+            <tr><td class="label">Points FIFA</td><td class="value">{{ result.away_stats.total_points|floatformat:0 }}</td></tr>
+            <tr><td class="label">Forme (5 derniers)</td><td class="value">{% widthratio result.away_stats.form5_winrate 1 100 %}% victoires</td></tr>
+            <tr><td class="label">Confédération</td><td class="value">{{ result.away_stats.confederation }}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="bar-block">
+        <div class="bar-header"><span>Victoire {{ result.home }}</span><span class="pct">{{ result.proba_home_win }} %</span></div>
+        <div class="bar-track"><div class="bar-fill fill-home" style="width: {{ result.proba_home_win }}%;"></div></div>
+      </div>
+      <div class="bar-block">
+        <div class="bar-header"><span>Match nul</span><span class="pct">{{ result.proba_draw }} %</span></div>
+        <div class="bar-track"><div class="bar-fill fill-draw" style="width: {{ result.proba_draw }}%;"></div></div>
+      </div>
+      <div class="bar-block">
+        <div class="bar-header"><span>Victoire {{ result.away }}</span><span class="pct">{{ result.proba_away_win }} %</span></div>
+        <div class="bar-track"><div class="bar-fill fill-away" style="width: {{ result.proba_away_win }}%;"></div></div>
+      </div>
+
+      <p class="model-note">Modèle : {{ result.model_name }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

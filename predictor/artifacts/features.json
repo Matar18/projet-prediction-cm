@@ -1,0 +1,23 @@
+{
+  "features": [
+    "rank_diff",
+    "points_diff",
+    "rank_trend_diff",
+    "form5_winrate_diff",
+    "form10_winrate_diff",
+    "goal_avg_diff",
+    "career_winrate_diff",
+    "experience_diff",
+    "home_rank",
+    "away_rank",
+    "home_total_points",
+    "away_total_points",
+    "home_form5_winrate",
+    "away_form5_winrate",
+    "is_neutral",
+    "is_world_cup",
+    "is_qualifier",
+    "is_friendly"
+  ],
+  "best_model": "Logistic Regression"
+}

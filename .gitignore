@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+*.log
+
+# Variables d'environnement locales (si tu ajoutes un fichier .env plus tard)
+.env
+
+# OS / éditeurs
+.DS_Store
+.vscode/
+.idea/
